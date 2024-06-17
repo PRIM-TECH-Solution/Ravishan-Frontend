@@ -3,19 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
 import Breadcrumbs from "../../components/pageProps/Breadcrumbs";
 import axios from "axios";
-import EmailPopup from "./EmailPopup"; // Import the EmailPopup component
+import EmailPopup from "./EmailPopup";
+import {jwtDecode} from "jwt-decode";
 
 const BookingSuccess = () => {
   const navigate = useNavigate();
-  const [orderId, setOrderId] = useState(null); // State to store orderId
+  const [orderId, setOrderId] = useState(null);
   const [showMessage, setShowMessage] = useState(false);
-  const [orderDetails, setOrderDetails] = useState(null); // State to store order details
-  const [eventDetails, setEventDetails] = useState(null); // State to store event details
-  const [ticketTypes, setTicketTypes] = useState([]); // State to store ticket types
-  const [showEmailPopup, setShowEmailPopup] = useState(false); // State to handle popup visibility
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [eventDetails, setEventDetails] = useState(null);
+  const [ticketTypes, setTicketTypes] = useState([]);
+  const [showEmailPopup, setShowEmailPopup] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false); // State to handle authorization
+  
 
   useEffect(() => {
-    // Function to fetch orderId from URL query params
     const fetchOrderId = () => {
       const params = new URLSearchParams(window.location.search);
       const orderIdParam = params.get("order_id");
@@ -26,11 +28,40 @@ const BookingSuccess = () => {
       }
     };
 
-    fetchOrderId(); // Call the function to fetch orderId
+    fetchOrderId();
   }, []);
 
   useEffect(() => {
     if (orderId) {
+      const fetchUserIdByOrderId = async () => {
+        try {
+          const response = await axios.get(`http://localhost:8081/order-summary/user-id/${orderId}`);
+          const fetchedUserId = String(response.data).trim();
+
+          const token = localStorage.getItem("token");
+          const decodedToken = jwtDecode(token);
+          const tokenUserId = String(decodedToken.user_id).trim();
+
+          
+
+          if (fetchedUserId === tokenUserId) {
+            setIsAuthorized(true);
+          } else {
+            setIsAuthorized(false);
+            navigate("/"); // Redirect to an unauthorized page or home
+            console.error("Unauthorized access");
+          }
+        } catch (error) {
+          console.error("Error fetching user_id:", error);
+        }
+      };
+
+      fetchUserIdByOrderId();
+    }
+  }, [orderId, navigate]);
+
+  useEffect(() => {
+    if (isAuthorized && orderId) {
       const fetchOrderDetails = async () => {
         try {
           const response = await axios.get(`http://localhost:8081/order-summary/success/${orderId}`, {
@@ -39,7 +70,7 @@ const BookingSuccess = () => {
             },
           });
 
-          setOrderDetails(response.data); // Set the fetched order details
+          setOrderDetails(response.data);
         } catch (error) {
           console.error("Error fetching order details:", error);
         }
@@ -47,21 +78,21 @@ const BookingSuccess = () => {
 
       fetchOrderDetails();
     }
-  }, [orderId]);
+  }, [isAuthorized, orderId]);
 
   useEffect(() => {
     if (orderDetails && orderDetails.event_id) {
       const fetchEventDetails = async () => {
         try {
-          const token = localStorage.getItem('token');
+          const token = localStorage.getItem("token");
           const response = await axios.get(`http://localhost:8080/eventcards/${orderDetails.event_id}`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              "Content-Type": "application/json"
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           });
 
-          setEventDetails(response.data); // Set the fetched event details
+          setEventDetails(response.data);
         } catch (error) {
           console.error("Error fetching event details:", error);
         }
@@ -75,7 +106,7 @@ const BookingSuccess = () => {
             },
           });
 
-          setTicketTypes(response.data); // Set the fetched ticket types
+          setTicketTypes(response.data);
         } catch (error) {
           console.error("Error fetching ticket types:", error);
         }
@@ -99,7 +130,6 @@ const BookingSuccess = () => {
       document.body.appendChild(link);
       link.click();
 
-      // Show the success message after downloading the ticket
       setShowMessage(true);
     } catch (error) {
       console.error("Error downloading e-ticket:", error);
@@ -113,6 +143,10 @@ const BookingSuccess = () => {
   const handleCloseMessage = () => {
     setShowMessage(false);
   };
+
+  if (!isAuthorized) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="max-w-container mx-auto px-4 py-6">
@@ -145,7 +179,6 @@ const BookingSuccess = () => {
         </div>
       </div>
 
-      {/* Success Message */}
       {showMessage && (
         <div className="fixed bottom-4 right-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg flex items-center space-x-4">
           <p>Your E-ticket has been sent to your email successfully.</p>
@@ -158,30 +191,39 @@ const BookingSuccess = () => {
         </div>
       )}
 
-      {/* Display order details */}
       {orderDetails && (
         <div className="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-lg shadow-lg">
           <h3 className="text-xl font-bold mb-4">Order Details</h3>
-          <p><span className="font-bold">Order ID:</span> {orderDetails.order_id}</p>
-          <p><span className="font-bold">Amount:</span> LKR {orderDetails.amount}</p>
-          <p><span className="font-bold">Status:</span> {orderDetails.status}</p>
-          <p><span className="font-bold">Event ID:</span> {orderDetails.event_id}</p>
-          {/* Add more fields as needed */}
+          <p>
+            <span className="font-bold">Order ID:</span> {orderDetails.order_id}
+          </p>
+          <p>
+            <span className="font-bold">Amount:</span> LKR {orderDetails.amount}
+          </p>
+          <p>
+            <span className="font-bold">Status:</span> {orderDetails.status}
+          </p>
+          <p>
+            <span className="font-bold">Event ID:</span> {orderDetails.event_id}
+          </p>
         </div>
       )}
 
-      {/* Display event details */}
       {eventDetails && (
         <div className="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-lg shadow-lg">
           <h3 className="text-xl font-bold mb-4">Event Details</h3>
-          <p><span className="font-bold">Event Name:</span> {eventDetails.eventName}</p>
-          <p><span className="font-bold">Location:</span> {eventDetails.eventLocation}</p>
-          <p><span className="font-bold">Date:</span> {eventDetails.eventDate}</p>
-          {/* Add more fields as needed */}
+          <p>
+            <span className="font-bold">Event Name:</span> {eventDetails.eventName}
+          </p>
+          <p>
+            <span className="font-bold">Location:</span> {eventDetails.eventLocation}
+          </p>
+          <p>
+            <span className="font-bold">Date:</span> {eventDetails.eventDate}
+          </p>
         </div>
       )}
 
-      {/* Email Popup */}
       {showEmailPopup && (
         <EmailPopup
           orderDetails={orderDetails}

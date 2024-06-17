@@ -18,6 +18,7 @@ const CheckoutPage = () => {
     nic: "",
     country: "",
     city: "",
+    user_id: "",
   });
 
   useEffect(() => {
@@ -53,7 +54,9 @@ const CheckoutPage = () => {
           nic: userData.nic,
           country: userData.country,
           city: userData.city,
+          userId: userData.user_id,
         });
+        console.log("User details fetched successfully:", userData);
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
@@ -117,6 +120,7 @@ const CheckoutPage = () => {
       order_id: orderId.toString(), // Ensure order_id is a string
       amount: totalSubtotal.toString(), // Ensure amount is a string
       currency: "LKR",
+      user_id:  userId.toString(), // Ensure userId is a string
       NIC: userDetails.nic.toString(), // Ensure nic is a string
       first_name: userDetails.firstName,
       last_name: userDetails.lastName,
