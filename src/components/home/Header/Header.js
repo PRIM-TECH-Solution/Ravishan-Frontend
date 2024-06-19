@@ -19,6 +19,7 @@ const Header = () => {
   const [dropdown, setDropdown] = useState(false);
   const [category, setCategory] = useState(false);
   const [username, setUsername] = useState(null);
+  const [isFirstLoad, setIsFirstLoad] = useState(true); // New state variable
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -44,16 +45,24 @@ const Header = () => {
             const response = await axios.get(`http://localhost:8080/auth/getUsername/${userId}`);
             setUsername(response.data); // Adjust according to the actual response structure
             dispatch(loginSuccess(response.data)); // Pass user data to the state
-            toast.success("Login successful");
+            
+            // Check if the user came from the sign-in page
+            if (location.state && location.state.fromSignIn) {
+              toast.success("Login successful");
+            }
           }
         }
       } catch (error) {
         console.error("Error fetching username", error);
+      } finally {
+        setIsFirstLoad(false); // Set to false after first check
       }
     };
 
-    fetchUsername();
-  }, [dispatch]);
+    if (isFirstLoad) {
+      fetchUsername();
+    }
+  }, [dispatch, isFirstLoad, location.state]);
 
   const handleSignOut = () => {
     localStorage.removeItem("token");

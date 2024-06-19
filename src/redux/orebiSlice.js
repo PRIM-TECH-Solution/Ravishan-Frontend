@@ -15,7 +15,7 @@ export const orebiSlice = createSlice({
     addToCart: (state, action) => {
       if (state.products.length > 0) {
         // Display a message that the cart already contains an event
-        toast.error("There is an event already added to the cart");
+        toast.error("There is an event already added");
       } else {
         const item = state.products.find(
           (item) => item._id === action.payload._id
@@ -26,7 +26,7 @@ export const orebiSlice = createSlice({
           state.products.push(action.payload);
         }
         // Dispatch a success toast
-        toast.success("Product added to cart");
+        toast.success("Event added");
       }
     },
     increaseQuantity: (state, action) => {
@@ -54,12 +54,12 @@ export const orebiSlice = createSlice({
         (item) => item._id !== action.payload
       );
       // Dispatch a success toast
-      toast.error("Product removed from cart");
+      toast.error("Event removed from cart");
     },
     resetCart: (state) => {
       state.products = [];
       // Dispatch a success toast
-      toast.success("Cart reset");
+      toast.success();
     },
 
     toggleBrand: (state, action) => {

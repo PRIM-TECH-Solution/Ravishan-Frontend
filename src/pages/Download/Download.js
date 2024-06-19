@@ -4,6 +4,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import Breadcrumbs from "../../components/pageProps/Breadcrumbs";
 import axios from "axios";
 import EmailPopup from "./EmailPopup";
+import SplitTicketsPopup from "./SplitTicketPopup";
 import {jwtDecode} from "jwt-decode";
 
 const BookingSuccess = () => {
@@ -14,8 +15,8 @@ const BookingSuccess = () => {
   const [eventDetails, setEventDetails] = useState(null);
   const [ticketTypes, setTicketTypes] = useState([]);
   const [showEmailPopup, setShowEmailPopup] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false); // State to handle authorization
-  
+  const [showSplitTicketsPopup, setShowSplitTicketsPopup] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
     const fetchOrderId = () => {
@@ -42,13 +43,11 @@ const BookingSuccess = () => {
           const decodedToken = jwtDecode(token);
           const tokenUserId = String(decodedToken.user_id).trim();
 
-          
-
           if (fetchedUserId === tokenUserId) {
             setIsAuthorized(true);
           } else {
             setIsAuthorized(false);
-            navigate("/"); // Redirect to an unauthorized page or home
+            navigate("/"); 
             console.error("Unauthorized access");
           }
         } catch (error) {
@@ -170,6 +169,14 @@ const BookingSuccess = () => {
           >
             Email
           </button>
+          {ticketTypes.length > 1 && ticketTypes.length <= 10 && (
+            <button
+              onClick={() => setShowSplitTicketsPopup(true)}
+              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Split Tickets
+            </button>
+          )}
           <button
             onClick={handleBookAnotherEvent}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
@@ -230,6 +237,14 @@ const BookingSuccess = () => {
           eventDetails={eventDetails}
           ticketTypes={ticketTypes}
           onClose={() => setShowEmailPopup(false)}
+        />
+      )}
+
+      {showSplitTicketsPopup && (
+        <SplitTicketsPopup
+          orderDetails={orderDetails}
+          ticketTypes={ticketTypes}
+          onClose={() => setShowSplitTicketsPopup(false)}
         />
       )}
     </div>

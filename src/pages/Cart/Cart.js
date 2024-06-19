@@ -1,5 +1,3 @@
-// Cart Component
-
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,7 +14,7 @@ const Cart = () => {
   const dispatch = useDispatch();
   const products = useSelector((state) => state.orebiReducer.products);
   const [totalAmt, setTotalAmt] = useState(0);
-  const [shippingCharge, setShippingCharge] = useState(0);
+  // const [shippingCharge, setShippingCharge] = useState(0);
   const [ticketDetails, setTicketDetails] = useState([]);
   const [selectedTickets, setSelectedTickets] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
@@ -57,15 +55,15 @@ const Cart = () => {
     setTotalAmt(newTotalAmt);
   };
 
-  useEffect(() => {
-    if (totalAmt <= 200) {
-      setShippingCharge(30);
-    } else if (totalAmt <= 400) {
-      setShippingCharge(25);
-    } else if (totalAmt > 401) {
-      setShippingCharge(20);
-    }
-  }, [totalAmt]);
+  // useEffect(() => {
+  //   if (totalAmt <= 200) {
+  //     setShippingCharge(30);
+  //   } else if (totalAmt <= 400) {
+  //     setShippingCharge(25);
+  //   } else if (totalAmt > 401) {
+  //     setShippingCharge(20);
+  //   }
+  // }, [totalAmt]);
 
   const handleCheckout = async () => {
     if (selectedTickets.length === 0) {
@@ -97,6 +95,13 @@ const Cart = () => {
     
     setShowPopup(true);
   };
+
+  // Cleanup effect to clear the cart when the component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(resetCart());
+    };
+  }, [dispatch]);
 
   return (
     <div className="max-w-container mx-auto px-4">

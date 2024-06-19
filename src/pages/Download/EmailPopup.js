@@ -46,60 +46,67 @@ const EmailPopup = ({ orderDetails, eventDetails, ticketTypes, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded shadow-lg">
-        <h2 className="text-2xl mb-4">Send Ticket Details via Email</h2>
+      <div className="bg-white p-8 sm:p-16 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="font-semibold text-2xl mb-6 text-center">Send Ticket(s) via Email</h2>
         {isEditing ? (
-          <div>
-            <label className="block mb-2">New Email:</label>
+          <div className="flex flex-col items-center text-xl">
+            <label className="block mb-2 text-center">Add New Email:</label>
             <input
               type="email"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               className="border p-2 rounded w-full mb-4"
             />
-            <button
-              onClick={() => {
-                setEmail(newEmail);
-                setIsEditing(false);
-              }}
-              className="bg-blue-500 text-white p-2 rounded mr-2"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="bg-gray-500 text-white p-2 rounded"
-            >
-              Cancel
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  setEmail(newEmail);
+                  setIsEditing(false);
+                }}
+                className="bg-blue-500 text-white p-2 rounded"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="bg-gray-500 text-white p-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
-          <div>
-            <p className="mb-4">Email: {email}</p>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="bg-blue-500 text-white p-2 rounded mb-4"
-            >
-              Edit Email
-            </button>
+          <div className="text-center text-xl">
+            <p className="mb-6">Email: {email}</p>
+            <div className="flex justify-center space-x-2 mb-4">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="bg-blue-500 text-white p-2 rounded"
+              >
+                Edit Email
+              </button>
+              <button
+                onClick={handleSendEmail}
+                className="bg-green-500 text-white p-2 rounded"
+                disabled={isLoading}
+              >
+                {isLoading ? "Sending..." : "Send Email"}
+              </button>
+            </div>
           </div>
         )}
-        <button
-          onClick={handleSendEmail}
-          className="bg-green-500 text-white p-2 rounded mr-2"
-          disabled={isLoading}
-        >
-          {isLoading ? "Sending..." : "Send Email"}
-        </button>
-        <button
-          onClick={onClose}
-          className="bg-red-500 text-white p-2 rounded"
-        >
-          Close
-        </button>
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={onClose}
+            className="bg-red-500 text-white p-2 rounded"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
+  
 };
 
 export default EmailPopup;
