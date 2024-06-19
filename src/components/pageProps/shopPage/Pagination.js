@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 const Pagination = ({ itemsPerPage }) => {
-  const [response, setResponses] = useState([]);
+  const [ setResponses] = useState([]);
   const [events, setEvents] = useState([]);
   const [itemOffset, setItemOffset] = useState(0);
   const [itemStart, setItemStart] = useState(1);

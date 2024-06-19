@@ -1,43 +1,73 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { HiOutlineMenuAlt4 } from "react-icons/hi";
-import { FaSearch, FaUser, FaCaretDown, FaShoppingCart } from "react-icons/fa";
+import { FaSearch} from "react-icons/fa";
 import Flex from "../../designLayouts/Flex";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { paginationItems } from "../../../constants";
-import { BsSuitHeartFill } from "react-icons/bs";
+// import { useSelector } from "react-redux";
+import axios from "axios";
+// import { BsSuitHeartFill } from "react-icons/bs";
 
 const HeaderBottom = () => {
-  const products = useSelector((state) => state.orebiReducer.products);
+  // const products = useSelector((state) => state.orebiReducer.products);
   const [show, setShow] = useState(false);
-  const [showUser, setShowUser] = useState(false);
+  // const [showUser, setShowUser] = useState(false);
   const navigate = useNavigate();
   const ref = useRef();
-  useEffect(() => {
-    document.body.addEventListener("click", (e) => {
-      if (ref.current.contains(e.target)) {
-        setShow(true);
-      } else {
-        setShow(false);
-      }
-    });
-  }, [show, ref]);
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [/*showSearchBar*/, setShowSearchBar] = useState(false);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [events, setEvents] = useState([]);
+
+  const getData = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/eventcards/getAll");
+      if (response.data != null) {
+        const eventList = response.data.map((e) => ({
+          eventName: e.eventName,
+          eventDate: e.eventDate,
+          eventTime: e.eventTime,
+          eventLocation: e.eventLocation,
+          eventDescription: e.eventDescription,
+          ticketDetails: e.ticketDetails,
+          eventCategory: e.eventCategory,
+          flyerLink: e.flyerLink,
+          eventId: e.eventId,
+          ticketType: e.ticketType,
+          ticketPrice: e.ticketPrice
+        }));
+        setEvents(eventList);
+      }
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    getData();
+  }, [getData]);
+
+  useEffect(() => {
+    const filtered = events.filter((event) =>
+      event.eventName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredEvents(filtered);
+  }, [searchQuery, events]);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
 
   useEffect(() => {
-    const filtered = paginationItems.filter((item) =>
-      item.productName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  }, [searchQuery]);
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setShow(false);
+      }
+    };
+    document.body.addEventListener("click", handleClickOutside);
+    return () => {
+      document.body.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="w-full bg-[#F5F5F3] relative">
@@ -93,7 +123,7 @@ const HeaderBottom = () => {
               type="text"
               onChange={handleSearch}
               value={searchQuery}
-              placeholder="Search your products here"
+              placeholder="Search for events here"
             />
             <FaSearch className="w-5 h-5" />
             {searchQuery && (
@@ -101,41 +131,40 @@ const HeaderBottom = () => {
                 className={`w-full mx-auto h-96 bg-white top-16 absolute left-0 z-50 overflow-y-scroll shadow-2xl scrollbar-hide cursor-pointer`}
               >
                 {searchQuery &&
-                  filteredProducts.map((item) => (
+                  filteredEvents.map((event) => (
                     <div
                       onClick={() =>
                         navigate(
-                          `/product/${item.productName
+                          `/product/${event.eventName
                             .toLowerCase()
                             .split(" ")
                             .join("")}`,
                           {
                             state: {
-                              item: item,
+                              event: event,
                             },
                           }
                         ) &
-                        setShowSearchBar(true) &
                         setSearchQuery("")
                       }
-                      key={item._id}
+                      key={event.eventId}
                       className="max-w-[600px] h-28 bg-gray-100 mb-3 flex items-center gap-3"
                     >
-                      <img className="w-24" src={item.img} alt="productImg" />
+                      <img className="w-24" src={event.flyerLink} alt="eventFlyer" />
                       <div className="flex flex-col gap-1">
                         <p className="font-semibold text-lg">
-                          {item.productName}
+                          {event.eventName}
                         </p>
                         <p className="text-xs">
-                          {item.des.length > 100
-                            ? `${item.des.slice(0, 100)}...`
-                            : item.des}
+                          {event.eventDescription.length > 100
+                            ? `${event.eventDescription.slice(0, 100)}...`
+                            : event.eventDescription}
                         </p>
                         <p className="text-sm">
-                          Price:{" "}
-                          <span className="text-primeColor font-semibold">
-                            ${item.price}
-                          </span>
+                          Date: <span className="text-primeColor font-semibold">{event.eventDate}</span>
+                        </p>
+                        <p className="text-sm">
+                          Location: <span className="text-primeColor font-semibold">{event.eventLocation}</span>
                         </p>
                       </div>
                     </div>
@@ -143,7 +172,7 @@ const HeaderBottom = () => {
               </div>
             )}
           </div>
-          <div className="flex gap-4 mt-2 lg:mt-0 items-center pr-6 cursor-pointer relative">
+          {/* <div className="flex gap-4 mt-2 lg:mt-0 items-center pr-6 cursor-pointer relative">
             <div onClick={() => setShowUser(!showUser)} className="flex">
               <FaUser />
               <FaCaretDown />
@@ -181,8 +210,15 @@ const HeaderBottom = () => {
                 </span>
               </div>
             </Link>
-            <BsSuitHeartFill />
-          </div>
+            <Link to="/wishlist">
+              <div className="relative">
+                <BsSuitHeartFill />
+                <span className="absolute font-titleFont top-3 -right-2 text-xs w-4 h-4 flex items-center justify-center rounded-full bg-primeColor text-white">
+                  0
+                </span>
+              </div>
+            </Link>
+          </div> */}
         </Flex>
       </div>
     </div>
